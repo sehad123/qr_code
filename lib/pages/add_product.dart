@@ -1,0 +1,119 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:qr_code/bloc/product/product_bloc.dart';
+
+class AddProductPage extends StatelessWidget {
+  AddProductPage({super.key});
+
+  final TextEditingController codeC = TextEditingController();
+  final TextEditingController nameC = TextEditingController();
+  final TextEditingController qtyC = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("ADD PRODUCT"),
+      ),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          TextField(
+            autocorrect: false,
+            controller: codeC,
+            keyboardType: TextInputType.number,
+            maxLength: 10,
+            decoration: InputDecoration(
+              labelText: "Product Code",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            autocorrect: false,
+            controller: nameC,
+            keyboardType: TextInputType.text,
+            decoration: InputDecoration(
+              labelText: "Product Name",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          TextField(
+            autocorrect: false,
+            controller: qtyC,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: "Quantity",
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              if (codeC.text.length != 10) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Code product must 10 characters"),
+                  ),
+                );
+              } else if (nameC.text.length == 0 || qtyC.text.length == 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("semua data wajib diisi"),
+                  ),
+                );
+              } else {
+                context.read<ProductBloc>().add(
+                      ProductEventAddProduct(
+                        code: codeC.text,
+                        name: nameC.text,
+                        qty: int.tryParse(qtyC.text) ?? 0,
+                      ),
+                    );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("produk berhasil ditambahkan"),
+                  ),
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(9),
+              ),
+            ),
+            child: BlocConsumer<ProductBloc, ProductState>(
+              listener: (context, state) {
+                // ibaratnya kalo ada error masuk ke catch
+                if (state is ProductStateError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.message),
+                    ),
+                  );
+                }
+                if (state is ProductStateComplete) {
+                  context.pop();
+                }
+              },
+              builder: (context, state) {
+                return Text(state is ProductStateLoading
+                    ? "LOADING..."
+                    : "ADD PRODUCT");
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
